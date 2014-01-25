@@ -1,9 +1,14 @@
 function p3 = new_p3(tile)
 
-   magfactor = 10;
+   magfactor = 5;
    %resulting tile size will be
    s0 = size(tile, 1);
-   tile1 = imresize(tile, [3*s0*magfactor/2 round(s0*magfactor*sqrt(3)/2)], 'bicubic');
+%    tile1 = imresize(tile, [3*s0*magfactor/2 round(s0*magfactor*sqrt(3)/2)], 'nearest');
+
+   newSize = 3*s0*magfactor/2;
+   newWidth = round(s0*magfactor*sqrt(3)/2);
+   tile1 = imresize(tile, [newSize newSize], 'nearest');   
+   tile1 = tile1(:, 1:newWidth);
    
    %AY Jan 7, 14: NEW Code. Instead of tilting the tile, use a mask to cut the rhombus    
    %make a mask
@@ -73,5 +78,5 @@ function p3 = new_p3(tile)
    
    %size(whole) = [2xlength 2xwidth]
    whole = max(two_thirds, one_third);
-   p3 = imresize(whole, 1/magfactor, 'bicubic');  
+   p3 = imresize(whole, 1/magfactor, 'nearest');  
 end

@@ -10,10 +10,10 @@ function generateWPSet
     %groups = {'P3M1', 'P31M', 'P6', 'P6M'};
     %groups = {'P1', 'P2', 'PM' ,'PG', 'CM', 'PMM', 'PMG','PGG', 'CMM', 'P4', 'P4M', 'P4G','P3', 'P6', 'P6M'};
     %groups = {'P6', 'P6M'};
-    groups = {'P6', 'P1', 'P2', 'P4', 'P3'};
+    groups = {'P3', 'P1', 'P4', 'P2'};
     %number of images per group
     %groups = {'P3'};
-    ingroup = 10;
+    ingroup = 5;
     ngroups = length(groups);
     
     %%image parameters

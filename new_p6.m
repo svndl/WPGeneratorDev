@@ -18,8 +18,6 @@ function p6 = new_p6(tile)
     %copy and cut the tile 
     tile0 = tile1(:, 1:x1);
     
-    %%F
-%     tile0 = place_letter(tile0);
     
     %right triangle inscribed into rectangle 
     %size(tile0) = [2y1 x x1]
