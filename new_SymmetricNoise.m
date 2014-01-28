@@ -166,7 +166,7 @@ end
 function img = catTiles(tile, N, type)
     %disp tile square
     sq = size(tile, 1)*size(tile, 2);
-    disp(strcat(type,'_area of tile = ', num2str(sq)));                
+    disp(strcat(type,' area of tile = ', num2str(sq)));                
     
     %write tile
     imwrite(tile, strcat('~/Documents/MATLAB/tiles/', type, '_tile.jpeg'), 'jpeg');

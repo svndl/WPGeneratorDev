@@ -131,11 +131,9 @@ end
        
         %%apply mask
         masked = 1 - image_hn(1:size(mask, 1), 1:size(mask, 2)).*mask;       
-        
-        %prepare for PowerDiva (remove 0s), keep centered around 0.5
-        outImg = abs(masked) + 1/255; 
-        grayMask = 0.5*(1 - mask);
-        outImg = outImg - grayMask;
+        %prepare for PowerDiva (remove 0s)
+        outImg = abs(masked) + 1/255;
+        grayMask = 
     end
     
     %% save group
