@@ -3,41 +3,43 @@ function generateWPSet
 %This script will generate a given number(ngroup) of exemplars of
 %given wallpaper groups(defined in groups). Each image will be square(NxN)
 %with repeating region of n pixels. Images will be low-pass filtered with
-%lowpass
 
-    %%group definitions
-    %groups = {'P1', 'P2', 'PM' ,'PG', 'CM', 'PMM', 'PMG','PGG', 'CMM', 'P4', 'P4M', 'P4G','P3', 'P3M1', 'P31M', 'P6', 'P6M'};
-    %groups = {'P3M1', 'P31M', 'P6', 'P6M'};
-    %groups = {'P1', 'P2', 'PM' ,'PG', 'CM', 'PMM', 'PMG','PGG', 'CMM', 'P4', 'P4M', 'P4G','P3', 'P6', 'P6M'};
-    %groups = {'P6', 'P6M'};
-    groups = {'P3', 'P1', 'P4', 'P2'};
+    %% group definitions
+    Groups = {'P1', 'P2', 'PM' ,'PG', 'CM', 'PMM', 'PMG', 'PGG', 'CMM', 'P4', 'P4M', 'P4G', 'P3', 'P3M1', 'P31M', 'P6', 'P6M'};
     %number of images per group
-    %groups = {'P3'};
-    ingroup = 5;
-    ngroups = length(groups);
+    inGroup = 5;
     
-    %%image parameters
+    %% image parameters
     %image size
-    N = 1024;
-    
+    wpSize = 1024;
     %area of tile that will be preserved across groups
-    n = 160;    
-    
-    %%Define your texture here
-    %myTexture = ...
-    
-    %%save parameters
-    saveStr = '~/Documents/WPSet/dev/';
-    sPath = strcat(saveStr, datestr(clock), '/');
+    tileArea = 160*160;    
     
     %% define number of scrambled images per group
     nScramble = 5;
     
-    %%store the raw images
-    sRaw = true;
+    %% Generate raw and scrambled set of groups 
+    [rawSet, rawFreqSet] = generateGroupSet(Groups, inGroup, wpSize, tileArea);
+    
+    scrambledSet = scrambleGroupSet(rawFreqSet, nScramble);
+    
+    %% average magnitude
+    
+    %% save averaged ans scrambled sets
+    
+
+    %% Average magnitude within the each group
+    %%save parameters
+    saveStr = '~/Documents/WPSet/dev/';
+    sPath = strcat(saveStr, datestr(clock), '/');
+    saveMode = 'TImages'; %Save fmt/numeration     
+    
+    
+    %% Handling raw images 
+    sRaw = false;
     sRawPath = strcat(sPath, 'raw/');
     
-    %%cell array to store raw images per group
+    %cell array to store raw images per group
     raw = cell(ingroup, 1);
     
     %cell array to store ffts of images per group
@@ -54,45 +56,96 @@ function generateWPSet
         error('MATLAB:generateWPSet:mkdir', sPath);
     end;
     
-    %Generating WPs and scrambling
-    for i = 1:ngroups
-        
-        group = groups{i};
-        disp(strcat('generating ', group));
-        
-        %%generating wallpapers, saving freq. representations
-        for j = 1:ingroup
-            raw{j} = new_SymmetricNoise(group, N, n);
-            rawFreq{j} = fft2(double(raw{j})); 
-        end;
-        
-        %save average magnitude
-        avgMag = meanMag(rawFreq);
-        imwrite(avgMag, strcat(sPath, group, '_magnitude.jpeg'), 'jpeg');
+%     %% Generating WPs and scrambling
+%     for i = 1:ngroups
+%         
+%         group = groups{i};
+%         disp(strcat('generating ', group));
+%         
+%         %%generating wallpapers, saving freq. representations
+%         for j = 1:ingroup
+%             raw{j} = new_SymmetricNoise(group, N, n);
+%             rawFreq{j} = fft2(double(raw{j})); 
+%         end;
+%         
+%         
+%         %save average magnitude
+%         avgMag = meanMag(rawFreq);
+%         %averaging images (replace each image's magnitude with the average) 
+%         averaged = filterGroup(meanGroup(rawFreq, avgMag), N); 
+% 
+%         
+%         %saving images
+%         if(strcmp(saveMode,'TImages'))
+%             ImgName = num2str(100*(100 + i));
+%             scImgName = num2str(100*(117 + i));
+%             saveFmt = 'png';
+%         else
+%             ImgName = strcat(group, '_');
+%             scImgName = strcat(group, '_', 'scrambled_');
+%             saveFmt = 'jpeg';
+%             filtered = filterGroup(rawFreq, N); 
+%             writeGroup(sPath, ImgName, filtered, saveFmt, '_original');
+%         end;
+%                 
+%         %saving with group-AVERAGED spectrum
+%         writeGroup(sPath, ImgName, averaged, saveFmt);
+%         
+%         %scrambling 
+%         for s = 1:nScramble
+%             rawScambled{s} = scramble(rawFreq, avgMag);
+%         end
+%         scrambled = filterGroup(rawScambled, N);
+%         writeGroup(sPath, scImgName, scrambled, saveFmt);
+%         
+%         if (sRaw)
+%            writeGroup(sRawPath, imgName, raw, saveFmt);
+%            writeGroup(sRawPath, imgName, rawScambled, saveFmt, 'scrambled');
+%         end
+%     end
+end
 
-        %averaging images (replace each image's magnitude with the average) 
-        averaged = filterGroup(meanGroup(rawFreq, avgMag), N);
-        filtered = filterGroup(raw, N);
+    %% 
+    
+    function [rawSet, rawFreqSet] = generateGroupSet(groups, inGroup, imgSize, tileArea)
+        %num of groups
+        nGroups = length(groups);
+        %cell array to store each group's set
+        rawSet = cell(nGroups, 1);
+        rawFreqSet = cell(nGroups, 1);
         
-        %saving images
-        writeGroup(sPath, group, filtered);
-        writeGroup(sPath, group, averaged, '_averaged');
-
-        %%scrambling 
-        for s = 1:nScramble
-            rawScambled{s} = scramble(rawFreq, avgMag);
-        end
-        scrambled = filterGroup(rawScambled, N);
-        writeGroup(sPath, group, scrambled, '_scrambled');
-        
-        if (sRaw)
-           writeGroup(sRawPath, group, raw);
-           writeGroup(sRawPath, group, rawScambled, 'scrambled');
+        for i = 1:nGroups
+            [rawSet{i}, rawFreqSet{i}] = generateGroup(groups{i}, inGroup, imgSize, tileArea);
         end
     end
-end
     
-    %%apply mask/filter/histeq to group 
+    %% generate a given number of exemplars within the typeGroup
+    function [rawGroup, rawFreqGroup] = generateGroup(typeGroup, inGroup, imgSize, tileArea)
+        
+        rawGroup = cell(inGroup, 1);
+        rawFreqGroup = cell(inGroup, 1);
+        n = round(sqrt(tileArea));
+        
+        disp(strcat('generating ', typeGroup));
+        for j = 1:inGroup
+            rawGroup{j} = new_SymmetricNoise(typeGroup, imgSize, n);
+            rawFreqGroup{j} = fft2(double(rawGroup{j})); 
+        end;
+    end
+   
+    %% Scramble wallpaper set
+    function rawScambled = scrambleWallpapers(rawFreq, numScramble)
+    end
+    
+    %% Scramble group
+    function rawScambledGroup = scrambleGroup(inGroup, numScramble)
+        for s = 1:nScramble
+            rawScambledGroup{s} = scramble(rawFreq, avgMag);
+        end
+    end
+    
+  
+    %% apply mask/filter/histeq to group 
     function out = filterGroup(inGroup, N)
         num = length(inGroup);
         out = cell(num, 1);
@@ -101,7 +154,7 @@ end
         end;
     end
     
-    %%Filter/mask every image
+    %% Filter/mask every image
     function outImg = filterImg(inImg, N)
     %filter parameters(whole image)
     
@@ -129,19 +182,19 @@ end
         outImg = 1 - image_hn(1:size(mask, 1), 1:size(mask, 2)).*mask;
     end
     
-    %%save group
-    function writeGroup(path, type, data, extra)
-        if(nargin < 4)
+    %% save group
+    function writeGroup(path, type, data, saveFmt, extra)
+        if(nargin < 5)
             extra = '';
         end;
         nImages = length(data);
         for n = 1:nImages
-            filename = strcat(type, '_', num2str(n), extra, '.jpeg');              
-            imwrite(data{n}, strcat(path, filename), 'jpeg');
+            filename = strcat(type, num2str(n), extra, '.', saveFmt);              
+            imwrite(data{n}, strcat(path, filename), saveFmt);
         end
     end
     
-    %%replace spectra
+    %% replace spectra
     
     function outImage = scramble(freqGroup, avgMag)
         if(nargin < 2)
@@ -165,7 +218,7 @@ end
         end
     end
     
-    %returns average mag of the group
+    %% returns average mag of the group
     function out = meanMag(freqGroup)
         nImages = length(freqGroup);
         mag = 0;
@@ -175,6 +228,7 @@ end
         out = mag/nImages;
     end
     
+    %% TODO: analyse group spectrum
     function analyseGroup(rawFreqGroup, scrambledGroup, avgAmp)
         if (nargin < 3)
             avgMag = meanMag(freqGroup);

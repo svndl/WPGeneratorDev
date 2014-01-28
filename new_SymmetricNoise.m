@@ -117,8 +117,9 @@ function image = new_SymmetricNoise(type, N, n, optTexture)
                 p4g = [rot90(tile, 3), rot90(tile, 2); tile, rot90(tile, 1)];
                 image = catTiles(p4g, N, type);                
             case 'P3'
-                width = round(n/sqrt(3*sqrt(3)));
-                height = width;
+                s = n/sqrt(3*sqrt(3));
+                height = round(s*1.5);
+                width = round(s*sqrt(3)/2);
                 start_tile = texture(1:height, 1:width);
                 p3 = new_p3(start_tile);
                 image = catTiles(p3, N, type);                

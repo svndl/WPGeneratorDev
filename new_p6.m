@@ -1,6 +1,6 @@
 function p6 = new_p6(tile)
     magfactor = 10;
-    tile1 = imresize(tile, magfactor, 'nearest');
+    tile1 = imresize(tile, magfactor, 'bicubic');
     s = size(tile1, 1);
 
     x1 = round(sqrt(3)*s/6);
@@ -24,8 +24,8 @@ function p6 = new_p6(tile)
     tile0 = tile0.*mask;
     
     %rotate tile1
-    tile120 = imrotate(tile0, 120);
-    tile240 = imrotate(tile0, 240);
+    tile120 = imrotate(tile0, 120, 'bicubic');
+    tile240 = imrotate(tile0, 240, 'bicubic');
 
     %trim the tiles manually, using trigonometric laws
     %AY NOTE: floor and round give us values that differ by 1 pix.
@@ -66,5 +66,5 @@ function p6 = new_p6(tile)
     
     %size(tile3) = [2y1 x 6x1]
     tile3 = [tile2, tile2_flipped];
-    p6 = imresize(tile3, 1/magfactor, 'nearest');
+    p6 = imresize(tile3, 1/magfactor, 'bicubic');
 end

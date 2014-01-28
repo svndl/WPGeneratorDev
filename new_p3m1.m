@@ -1,7 +1,7 @@
 function p3m1 = new_p3m1(tile)
 
     magfactor = 10;
-    tile0 = imresize(tile, magfactor, 'nearest');
+    tile0 = imresize(tile, magfactor, 'bicubic');
     s = size(tile0, 1);
     %% make equlateral triangular tile:
     
@@ -33,7 +33,7 @@ function p3m1 = new_p3m1(tile)
     
     %reflect and rotate
     tile1_mirror = fliplr(tile1);
-    tileR1 = imrotate(tile1_mirror, 240, 'bilinear');
+    tileR1 = imrotate(tile1_mirror, 240, 'bicubic');
     %AY: I directly cut the tiles, because trim will
     %return slightly different size
     
@@ -42,7 +42,7 @@ function p3m1 = new_p3m1(tile)
     
     %AY: rotating mirrored tile(as opposed to tileR1) will cause less
     %border effects when we'll add it to two other tiles.
-    tileR2 = imrotate(tile1_mirror, 480, 'bilinear');
+    tileR2 = imrotate(tile1_mirror, 480, 'bicubic');
     tileR2 = tileR2(1:s, 1:x1);
     %%Assembling the tiles
     
@@ -74,5 +74,5 @@ function p3m1 = new_p3m1(tile)
     %reflecting middle piece and glueing both pieces to the bottom
     %size(bigTile)  = [6*y1 2*x1]    
     bigTile = [whole;  fliplr(mid_tile), mid_tile];
-    p3m1 = imresize(bigTile, 1/magfactor, 'nearest');
+    p3m1 = imresize(bigTile, 1/magfactor, 'bicubic');
 end

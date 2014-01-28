@@ -1,7 +1,7 @@
 function p31m = new_p31m(tile)
 
     magfactor = 10;
-    tile0 = imresize(tile, magfactor, 'nearest');
+    tile0 = imresize(tile, magfactor, 'bicubic');
     s = size(tile0, 1);
 
     x1 = round(sqrt(3)*s/6);
@@ -24,12 +24,9 @@ function p31m = new_p31m(tile)
     %size(tile1) = [2y1 x x1]
     tile1 = tile1.*mask;
     
-    %%F
-%     tile1 = place_letter(tile1);
-    
     %rotate the tile
-    tile120 = imrotate(tile1, 120);
-    tile240 = imrotate(tile1, 240);
+    tile120 = imrotate(tile1, 120, 'bicubic');
+    tile240 = imrotate(tile1, 240, 'bicubic');
     
     %trim the tiles manually, using trigonometric laws
     %AY NOTE: floor and round give us values that differ by 1 pix.
@@ -66,5 +63,5 @@ function p31m = new_p31m(tile)
 
     %size(tile3) = [2y1 6x1]
     tile3 = [tile2, fliplr(tile2)];
-    p31m = imresize(tile3, 1/magfactor, 'nearest');   
+    p31m = imresize(tile3, 1/magfactor, 'bicubic');   
 end
