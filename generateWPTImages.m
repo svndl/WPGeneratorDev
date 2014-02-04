@@ -149,7 +149,9 @@ end
         image_hn = histeq(image);
        
         %%apply mask
-        masked = 1 - image_hn(1:size(mask, 1), 1:size(mask, 2)).*mask;       
+        %masked = 1 - image_hn(1:size(mask, 1), 1:size(mask, 2)).*mask;
+        masked = image_hn(1:size(mask, 1), 1:size(mask, 2));
+        masked(mask==0) = 1;
         
         %prepare for PowerDiva (remove 0s), keep centered around 0.5
         outImg = abs(masked) + 1/255; 
