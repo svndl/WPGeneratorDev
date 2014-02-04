@@ -102,7 +102,12 @@ function generateWPTImages
                 imwrite(raw{img}, strcat(sRawPath, wallpaperName), saveFmt);
             end
         end
+        allMeaned(:,i)=avgRaw;
+        allAveraged(:,i)= averaged;
+        allScrambled(:,i)= scrambled;
+        allRaw(:,i)=raw;
     end
+    save([sPath,datestr(clock),'.mat'],'allAveraged','allScrambled','allRaw','allMeaned','Groups');
 end
 
 
