@@ -12,7 +12,7 @@ function generateWPTImages
     %% define groups to be generated
     Groups = keySet;
     %number of images per group
-    inGroup = 20;
+    inGroup = 2;
     
     %% image parameters
     %image size
@@ -21,7 +21,7 @@ function generateWPTImages
     tileArea = 100*100;    
     
     %% define number of scrambled images per group
-    nScramble = 20;    
+    nScramble = 2;    
 
     %% Average magnitude within the each group
     %%save parameters
@@ -153,11 +153,18 @@ end
         image_hn = histeq(image);
        
         %%apply mask
+        %masked = 1 - image_hn(1:size(mask, 1), 1:size(mask, 2)).*mask;
         outImg = image_hn(1:size(mask, 1), 1:size(mask, 2));
         outImg(mask==0)=.5;
         
-        %prepare for PowerDiva (remove 1s and 0s), keep centered around 0.5
-        outImg(outImg<2/255)=2/255; 
+        %prepare for PowerDiva (remove 0s), keep centered around 0.5
+        outImg(outImg<2/255)=2/255;
+        tic
+        while mean(mean(outImg))
+            maxVal = max(max(outImg));
+            outImg(outImg==maxVal)=outImg(outImg==maxVal)-1/255;
+        end
+        toc
     end
     
     %% save group
