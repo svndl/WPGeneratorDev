@@ -8,7 +8,8 @@ function image = new_SymmetricNoise(type, N, n, optTexture)
     
     %default 
     if(nargin < 4) 
-        texture = filterTile(rand(n));
+        grain = 1;
+        texture = filterTile(rand(n), grain);
     else
         minDim = min(size(optTexture));
         %stretch user-defined texture, if it is too small for sampling
