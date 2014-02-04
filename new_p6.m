@@ -1,27 +1,23 @@
 function p6 = new_p6(tile)
     magfactor = 10;
     tile1 = imresize(tile, magfactor, 'bicubic');
-    s = size(tile1, 1);
+    height = size(tile1, 1);
 
-    x1 = round(sqrt(3)*s/6);
-    y1 = round(s/2);
+    width = min(size(tile1, 2), round(0.5*height*tan(pi/6)));
+    y1 = round(height/2);
     
     %vetrices of the triangle (closed polygon => four points)
-    mask_x1 = [0 x1 0 0];
-    mask_y1 = [0 y1 2*y1 0];
+    mask_x1 = [0 width 0 0];
+    mask_y1 = [0 y1 height 0];
     
     %half of the mask
     %reflect and concatenate, to get the full mask:   
-    mask_half = poly2mask(mask_x1, mask_y1, y1, x1);
-    mask = cat(1, mask_half, flipud(mask_half));
-    
-    %copy and cut the tile 
-    tile0 = tile1(:, 1:x1);
-    
+    mask_half = poly2mask(mask_x1, mask_y1, y1, width);
+    mask = cat(1, mask_half, flipud(mask_half));    
     
     %right triangle inscribed into rectangle 
     %size(tile0) = [2y1 x x1]
-    tile0 = tile0.*mask;
+    tile0 = mask.*tile1(:, 1:width);
     
     %rotate tile1
     tile120 = imrotate(tile0, 120, 'bicubic');
@@ -30,7 +26,7 @@ function p6 = new_p6(tile)
     %trim the tiles manually, using trigonometric laws
     %AY NOTE: floor and round give us values that differ by 1 pix.
     %to trim right, we'll have to derive the trim value from 
-    tile0 = [tile0 zeros(s, x1*2)];    
+    tile0 = [tile0 zeros(height, width*2)];    
     delta = size(tile0, 2);
     
     %ideally we would've used  
@@ -47,8 +43,8 @@ function p6 = new_p6(tile)
     
     %glue them together by padding and smoothing edges (max instead of sum)
     %tile0 already padded
-    tile120 = [zeros(y1, x1*3); tile120];
-    tile240 = [tile240; zeros(y1, x1*3)];
+    tile120 = [zeros(y1, width*3); tile120];
+    tile240 = [tile240; zeros(y1, width*3)];
     
     %size(tri) = [2y1 x 3x1]
     tri = max(max(tile0, tile120), tile240);

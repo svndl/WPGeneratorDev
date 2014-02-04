@@ -4,8 +4,8 @@ function outTile =  filterTile(inTile)
     mu = 0.5;
     nx = size(inTile, 1);
     ny = size(inTile, 2);
-    sigma_x = 10/nx;
-    sigma_y = 10/ny;
+    sigma_x = (10/160)*(nx/160);
+    sigma_y = (10/160)*(ny/160);
     x = linspace(0, 1, nx);
     y = linspace(0, 1, ny);
     

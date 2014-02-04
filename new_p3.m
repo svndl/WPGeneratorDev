@@ -17,13 +17,13 @@ function p3 = new_p3(tile)
    %and after 240 deg rotation width(tile240) < 2*width(tile1) (should be
    %bigger or equal, because we cat them together)
    
-   width = round(s1*sqrt(3));
-   tile1 = tile1(:, 1:width);
+   width = min(round(s1*sqrt(3)), size(tile1, 2));
    
    x = [0 width width 0 0];
    y = [0 s1 height 2*s1 0];
    mask = poly2mask(x, y, height, width);
-   tile0 = mask.*tile1;
+   
+   tile0 = mask.*tile1(:, 1:width);
     
    %rotate rectangle by 120, 240 degs
    tile120 = imrotate(tile0, 120, 'bicubic');

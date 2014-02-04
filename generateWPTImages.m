@@ -4,17 +4,21 @@ function generateWPTImages
     valueSet = 101:1:117;
     mapGroup = containers.Map(keySet, valueSet);
     
-    
+    hexLattice = {'P3', 'P3M1', 'P31M', 'P6', 'P6M'};
+    sqrLattice = {'P4', 'P4M', 'P4G'};
+    recLattice = {'PM', 'PMM', 'PMG', 'PGG', 'PG'};
+    rhoLattice = {'CM', 'CMM'};
+    obqLattice = {'P1', 'P2'};
     %% define groups to be generated
-    Groups = {'P2', 'P3', 'P4', 'PMM', 'CMM'};
+    Groups = hexLattice;
     %number of images per group
-    inGroup = 2;
+    inGroup = 5;
     
     %% image parameters
     %image size
-    wpSize = 1024;
+    wpSize = 600;
     %area of tile that will be preserved across groups
-    tileArea = 160*160;    
+    tileArea = 100*100;    
     
     %% define number of scrambled images per group
     nScramble = 2;    
@@ -23,11 +27,11 @@ function generateWPTImages
     %%save parameters
     saveStr = '~/Documents/WPSet/dev/';
     sPath = strcat(saveStr, datestr(clock), '/');
-    saveFmt = 'png'; %Save fmt/numeration     
+    saveFmt = 'pgm'; %Save fmt/numeration     
     
     
     %% Handling raw images 
-    saveRaw = true;
+    saveRaw = false;
     sRawPath = strcat(sPath, 'raw/');
     
     %cell array to store raw images per group
@@ -38,6 +42,7 @@ function generateWPTImages
     
     %cell array to store scrambled
     rawScambled = cell(nScramble, 1);
+    printAnalysis = true;
     
     try
         mkdir(sPath);
@@ -63,7 +68,22 @@ function generateWPTImages
         
         %averaging images (replace each image's magnitude with the average) 
         avgMag = meanMag(rawFreq);
-        averaged = filterGroup(meanGroup(rawFreq, avgMag), wpSize); 
+        avgRaw = meanGroup(rawFreq, avgMag);
+        averaged = filterGroup(avgRaw, wpSize); 
+        
+ 
+        %% saving averaged and scrambled images
+        groupNumber = mapGroup(group);
+        for img = 1:inGroup
+            if(printAnalysis) 
+                saveStr = strcat(sPath, group, '_', num2str(img), 'analysis');
+                freqAnalyser(avgMag, rawFreq{img}, averaged{img}, saveStr);
+                all_in_one = cat(2, raw{img}(1:wpSize, 1:wpSize), avgRaw{img}(1:wpSize, 1:wpSize), averaged{img});
+                imwrite(all_in_one,  strcat(sPath, group, '_', num2str(img), '.jpeg'), 'jpeg');
+            end;
+            wallpaperName = strcat(num2str(1000*groupNumber + img), '.', saveFmt);
+            imwrite(averaged{img}, strcat(sPath, wallpaperName), saveFmt);
+        end
         
         %% making scrambled images
         for s = 1:nScramble
@@ -71,14 +91,6 @@ function generateWPTImages
         end
         scrambled = filterGroup(rawScambled, wpSize);
 
- 
-        %% saving averaged and scrambled images
-        groupNumber = mapGroup(group);
-        for img = 1:inGroup
-            wallpaperName = strcat(num2str(1000*groupNumber + img), '.', saveFmt);
-            imwrite(averaged{img}, strcat(sPath, wallpaperName), saveFmt);
-            imwrite(averaged{img}, strcat(sPath, wallpaperName), saveFmt);
-        end
         
         for scr = 1:nScramble
             scrambleName = strcat(num2str(1000*(groupNumber + 17) + scr), '.', saveFmt);
@@ -106,8 +118,10 @@ end
     %% Filter/mask every image
     function outImg = filterImg(inImg, N)
     %filter parameters(whole image)
-    
-        lowpass = fspecial('gaussian', [9 9], 1.5);
+        
+        % Make filter intensity adaptive (600 is empirical number)
+        sigma = N/600;
+        lowpass = fspecial('gaussian', [9 9], sigma);
         %%define mask(circle)
         r = 0.5*N;
         X = -0.5*N:0.5*N - 1;   
