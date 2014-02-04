@@ -198,9 +198,9 @@ end
     %% returns average mag of the group
     function out = meanMag(freqGroup)
         nImages = length(freqGroup);
-        mag = 0;
+        mag = [];
         for n = 1:nImages
-            mag = mag + abs(freqGroup{n});
+            mag(:,:,n) = abs(freqGroup{n});
         end;
-        out = mag/nImages;
+        out = median(mag,3);
     end
