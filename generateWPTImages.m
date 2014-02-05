@@ -60,22 +60,24 @@ function generateWPTImages
     %% Generating WPs and scrambling
     
     for i = 1:length(Groups)    
+        disp(strcat('generating', ' ', Groups{i}));
+
         group = Groups{i};
-        disp(strcat('generating', ' ', group));
         n = round(sqrt(tileArea));
         
         %%generating wallpapers, saving freq. representations
-        for j = 1:inGroup
-            raw{j} = new_SymmetricNoise(group, wpSize, n);
-            rawFreq{j} = fft2(double(raw{j})); 
-        end;
-        
+        raw = cellfun(@new_SymmetricNoise,...
+            repmat({group},inGroup,1), ...
+            repmat({wpSize},inGroup,1),...
+            repmat({n},inGroup,1), ...
+            'uni',false);
+        raw = cellfun(@double,raw,'uni',false);
+        rawFreq = cellfun(@fft2,raw,'uni',false);
         %averaging images (replace each image's magnitude with the average) 
         avgMag = meanMag(rawFreq);
         avgRaw = meanGroup(rawFreq, avgMag);
         averaged = filterGroup(avgRaw, wpSize); 
         
- 
         %% saving averaged and scrambled images
         groupNumber = mapGroup(group);
         for img = 1:inGroup
@@ -90,11 +92,8 @@ function generateWPTImages
         end
         
         %% making scrambled images
-        for s = 1:nScramble
-            rawScambled{s} = scramble(rawFreq, avgMag);
-        end
-        scrambled = filterGroup(rawScambled, wpSize);
-
+        rawScrambled = cellfun(@scramble,repmat({rawFreq},nScramble,1),repmat({avgMag},nScramble,1),'uni',false);
+        scrambled = filterGroup(rawScrambled, wpSize);
         
         for scr = 1:nScramble
             scrambleName = strcat(num2str(1000*(groupNumber + 17) + scr), '.', saveFmt);
@@ -157,7 +156,7 @@ end
         outImg(mask==0)=.5;
         
         %prepare for PowerDiva (remove 1s and 0s), keep centered around 0.5
-        outImg(outImg<2/255)=2/255; 
+        outImg(outImg<1/255)=1/255; 
     end
     
     %% save group
