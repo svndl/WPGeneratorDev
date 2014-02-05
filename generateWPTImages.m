@@ -76,19 +76,20 @@ function generateWPTImages
         %averaging images (replace each image's magnitude with the average) 
         avgMag = meanMag(rawFreq);
         avgRaw = meanGroup(rawFreq, avgMag);
-        averaged = filterGroup(avgRaw, wpSize); 
+        filtered = filterGroup(avgRaw, wpSize);
+        masked = maskGroup(filtered, wpSize);
         
         %% saving averaged and scrambled images
         groupNumber = mapGroup(group);
         for img = 1:inGroup
             if(printAnalysis) 
                 saveStr = strcat(sPath, 'analysis/',group, '_', num2str(img), 'analysis');
-                freqAnalyser(avgMag, rawFreq{img}, averaged{img}, saveStr);
-                all_in_one = cat(2, raw{img}(1:wpSize, 1:wpSize), avgRaw{img}(1:wpSize, 1:wpSize), averaged{img});
+                freqAnalyser(avgMag, rawFreq{img}, filtered{img}, saveStr);
+                all_in_one = cat(2, raw{img}(1:wpSize, 1:wpSize), avgRaw{img}(1:wpSize, 1:wpSize), filtered{img}(1:wpSize, 1:wpSize));
                 imwrite(all_in_one,  strcat(sPath, 'analysis/',group, '_', num2str(img), '.jpeg'), 'jpeg');
             end;
             wallpaperName = strcat(num2str(1000*groupNumber + img), '.', saveFmt);
-            imwrite(averaged{img}, strcat(sPath, wallpaperName), saveFmt);
+            imwrite(masked{img}, strcat(sPath, wallpaperName), saveFmt);
         end
         
         %% making scrambled images
@@ -124,12 +125,34 @@ end
     end
     
     %% Filter/mask every image
-    function outImg = filterImg(inImg, N)
-    %filter parameters(whole image)
-        
+    function out = maskGroup(inGroup, N)
+        num = length(inGroup);
+        out = cell(num, 1);
+        for n = 1:num
+            out{n} = maskImg(inGroup{n}, N);
+        end
+    end
+    %% Filter/mask every image
+    function outImg = filterImg(inImg, N)        
         % Make filter intensity adaptive (600 is empirical number)
         sigma = N/600;
         lowpass = fspecial('gaussian', [9 9], sigma);
+    
+        %%filter
+        image = imfilter(inImg, lowpass);
+        
+        %normalize
+        image = image - min(image(:));
+        image = image./max(image(:));
+        %%histeq
+        image_hn = histeq(image);
+        outImg = image_hn;
+        %prepare for PowerDiva (remove 1s and 0s), keep centered around 0.5        
+        outImg(outImg<1/255) = 1/255; 
+    end
+    
+    %%apply mask
+    function outImg = maskImg(inImg, N)
         %%define mask(circle)
         r = 0.5*N;
         X = -0.5*N:0.5*N - 1;   
@@ -140,23 +163,8 @@ end
         D(D < 1) = 0;
         D(D > 1) = 1;
         mask = 1 - D;
-
-    
-        %%filter
-        image = imfilter(inImg, lowpass);
-        
-        %normalize
-        image = image - min(image(:));
-        image = image./max(image(:));
-        %%histeq
-        image_hn = histeq(image);
-       
-        %%apply mask
-        outImg = image_hn(1:size(mask, 1), 1:size(mask, 2));
+        outImg = inImg(1:size(mask, 1), 1:size(mask, 2));
         outImg(mask==0)=.5;
-        
-        %prepare for PowerDiva (remove 1s and 0s), keep centered around 0.5
-        outImg(outImg<1/255)=1/255; 
     end
     
     %% save group
