@@ -3,13 +3,10 @@ function p3m1 = new_p3m1(tile)
     magfactor = 10;
     tile1= imresize(tile, magfactor, 'bicubic');
     height = size(tile1, 1);
-    %% make equlateral triangular tile:
     
-    %We'll need to create equlateral triangle mask with side length = s.
-    %Create rectangle with sides s/2, s*sqrt(3)/2
-    %according to Pythagorean theorem
     
-    width = min(round(height*sqrt(3)), size(tile1, 2));
+    %% fundamental region is equlateral triangle with side length = height 
+    width = round(0.5*height*sqrt(3));
 
     y1 = round(height/2);
    
@@ -30,29 +27,29 @@ function p3m1 = new_p3m1(tile)
     
     %reflect and rotate
     tile1_mirror = fliplr(tile0);
-    tileR1 = imrotate(tile1_mirror, 240, 'bicubic');
+    tile240 = imrotate(tile1_mirror, 240, 'bilinear');
     %AY: I directly cut the tiles, because trim will
     %return slightly different size
     
-    t_r1x = size(tileR1, 1);
-    tileR1 = tileR1(t_r1x - height + 1:end, 1:width);
+    t_r1x = size(tile240, 1);
+    tile240 = tile240(t_r1x - height + 1:end, 1:width);
     
     %AY: rotating mirrored tile(as opposed to tileR1) will cause less
     %border effects when we'll add it to two other tiles.
-    tileR2 = imrotate(tile1_mirror, 120, 'bicubic');
-    tileR2 = tileR2(1:height, 1:width);
+    tile120 = imrotate(tile1_mirror, 120, 'bilinear');
+    tile120 = tile120(1:height, 1:width);
     %%Assembling the tiles
     
     %We have 3 tiles with the same triangle rotated 0, 120 and 240
     %pad them and put them together
     zero_tile = zeros(y1, width);
     tile2 = [zero_tile; tile0; zero_tile];
-    tileR1 = [zero_tile; zero_tile; tileR1];
-    tileR2 = [tileR2; zero_tile; zero_tile];
+    tile240 = [zero_tile; zero_tile; tile240];
+    tile120 = [tile120; zero_tile; zero_tile];
     
     %Using max() will give us smoother edges, as opppose to sum()
-    half1 = max(tile2, tileR1);
-    half = max(half1, tileR2);
+    half1 = max(tile2, tile240);
+    half = max(half1, tile120);
     
     %By construction, size(whole) = [4*y1 2*x1]
     whole = [half, fliplr(half)];

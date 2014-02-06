@@ -121,23 +121,20 @@ function image = new_SymmetricNoise(type, N, n, optTexture)
                 alpha = pi/3;
                 s = n/sqrt(3*tan(alpha));
                 height = round(s*1.5);
-                width = round(s*cos(pi/6));
-                start_tile = texture(1:height, 1:width);
+                start_tile = texture(1:height, :);
                 p3 = new_p3(start_tile);
                 image = catTiles(p3, N, type);                
             case 'P3M1'
                 alpha = pi/3;
                 s = n/sqrt(3*tan(alpha));
                 height = round(s);
-                width = round(s*cos(pi/6));
-                start_tile = texture(1:height, 1:width);                
+                start_tile = texture(1:height, :);                
                 p3m1 = new_p3m1(start_tile);                
                 image = catTiles(p3m1, N, type);                
             case 'P31M'
                 s = n/sqrt(sqrt(3));
                 height = round(s);
-                width = round(0.5*s/sqrt(3));
-                start_tile = texture(1:height, 1:width);                
+                start_tile = texture(1:height, :);                
                 p31m = new_p31m(start_tile);
                 %ugly trick
                 p31m_1 = fliplr(p31m');
@@ -145,15 +142,13 @@ function image = new_SymmetricNoise(type, N, n, optTexture)
             case 'P6'
                 s = n/sqrt(sqrt(3));
                 height = round(s);
-                width = round(0.5*s/sqrt(3));
-                start_tile = texture(1:height, 1:width);                
+                start_tile = texture(1:height, :);                
                 p6 = new_p6(start_tile);
                 image = catTiles(p6, N, type);                
             case 'P6M'
                 s = n/sqrt(sqrt(3));
                 height = round(s/2);
-                width = round(0.5*s/sqrt(3));
-                start_tile = texture(1:height, 1:width);
+                start_tile = texture(1:height, :);
                 p6m = new_p6m(start_tile);
                 image = catTiles(p6m, N, type);                
             otherwise

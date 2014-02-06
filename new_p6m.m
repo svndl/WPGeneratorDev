@@ -4,8 +4,9 @@ function p6m = new_p6m(tile)
     tile1 = imresize(tile, magfactor, 'bicubic');
     height = size(tile1, 1);
     
-    width = min(round(height*sqrt(3)/3), size(tile1, 2));
+    width = round(height/sqrt(3));
 
+    %% fundamental region is right triangle with angles (30, 60)
     
     %vetrices of the triangle (closed polygon => four points)
     mask_x1 = [0 width 0 0];
@@ -18,15 +19,15 @@ function p6m = new_p6m(tile)
     %right triangle inscribed into rectangle 
     tile0 = tile1(:, 1:width).*mask;
     
-    %size(tile0) = [2y1 x x1]   
+    %size(tile0) = [height x width]   
     tile0 = [tile0; flipud(tile0)]; 
     
     %rotate tile1
-    tile120 = imrotate(tile0, 120, 'bicubic');
-    tile240 = imrotate(tile0, 240, 'bicubic');
+    tile120 = imrotate(tile0, 120, 'bilinear');
+    tile240 = imrotate(tile0, 240, 'bilinear');
 
     %trim the tiles manually, using trigonometric laws
-    %AY NOTE: floor and round give us values that differ by 1 pix.
+    %NOTE: floor and round give us values that differ by 1 pix.
     %to trim right, we'll have to derive the trim value from 
     tile0 = [tile0 zeros(2*height, width*2)];    
     delta = size(tile0, 2);
