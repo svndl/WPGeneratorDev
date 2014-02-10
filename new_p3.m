@@ -1,38 +1,47 @@
 function p3 = new_p3(tile)
 
-   magfactor = 10;
+   %For magfactor, use a multiple of 3 to avoid the rounding error
+   %when stacking two_tirds, one_third tiles together
+   
+   magfactor = 9;
+   
    tile1 = imresize(tile, magfactor, 'bicubic');   
-   
-   %AY Jan 7, 14: NEW Code. Instead of tilting the tile, use a mask to cut the rhombus    
-   %make a mask
-   
    height = size(tile1, 1);
    
-   %rhombus's side length = s
+   %% fundamental region is equlateral rhombus with side length = s
+   
    s1 = round(height/3); 
    s = 2*s1;
    
-   %Note about 'ugly' way of calculating the width
+   %NOTE on 'ugly' way of calculating the width
    %after magnification width(tile1) > tan(pi/6)*height(tile1) (should be equal)
    %and after 240 deg rotation width(tile240) < 2*width(tile1) (should be
-   %bigger or equal, because we cat them together)
+   %bigger or equal, because we cat them together).
+   %subtract one, to avoid screwing by imrotate(240)
    
-   width = min(round(s1*sqrt(3)), size(tile1, 2));
+   width = round(height/sqrt(3)) - 1;
+   %width = min(round(height/sqrt(3)), size(tile1, 2)) - 1;
+   
+   %define rhombus-shaped mask
    
    x = [0 width width 0 0];
    y = [0 s1 height 2*s1 0];
    mask = poly2mask(x, y, height, width);
-   
    tile0 = mask.*tile1(:, 1:width);
     
    %rotate rectangle by 120, 240 degs
-   tile120 = imrotate(tile0, 120, 'bicubic');
-   tile240 = imrotate(tile0, 240, 'bicubic');
+   
+   %note on 120deg rotation: 120 deg rotation of rhombus-shaped 
+   %texture preserves the size, so 'crop' option can be used to 
+   %tile size.
+   
+   tile120 = imrotate(tile0, 120, 'bilinear', 'crop');
+   tile240 = imrotate(tile0, 240, 'bilinear');
    
    %%manually trim the tiles:
    
    %tile120 should have the same size as rectangle: [heigh x width]
-   tile120 = tile120(1:height, (floor(0.5*width) + 1):(floor(0.5*width) + width));
+   %tile120 = tile120(1:height, (floor(0.5*width) + 1):(floor(0.5*width) + width));
    
    %tile240 should have the size [s x 2*width]
    %find how much we need to cut from both sides
@@ -68,5 +77,5 @@ function p3 = new_p3(tile)
    
    %size(whole) = [3xheight 2xwidth]
    whole = max(two_thirds, one_third);
-   p3 = imresize(whole, 1/magfactor, 'bicubic');  
+   p3 = imresize(whole, 1/magfactor, 'bicubic');
 end
