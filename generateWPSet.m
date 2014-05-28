@@ -32,7 +32,7 @@ function generateWPSet
     %%save parameters
     saveStr = '~/Documents/WPSet/dev/';
     sPath = strcat(saveStr, datestr(clock), '/');
-    saveMode = 'TImages'; %Save fmt/numeration     
+    saveMode = 'jpeg'; %Save fmt/numeration     
     
     
     %% Handling raw images 
