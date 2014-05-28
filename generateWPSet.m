@@ -142,7 +142,7 @@ end
         end;
         nImages = length(data);
         for n = 1:nImages
-            filename = strcat(type, num2str(n), extra, '.', saveFmt);              
+            filename = strcat(type, '_', num2str(n), extra, '.', saveFmt);              
             imwrite(data{n}, strcat(path, filename), saveFmt);
         end
     end
