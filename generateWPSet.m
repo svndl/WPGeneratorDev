@@ -5,9 +5,10 @@ function generateWPSet
 %with repeating region of n pixels. Images will be low-pass filtered with
 
     %% group definitions
-    Groups = {'P1', 'P2', 'PM' ,'PG', 'CM', 'PMM', 'PMG', 'PGG', 'CMM', 'P4', 'P4M', 'P4G', 'P3', 'P3M1', 'P31M', 'P6', 'P6M'};
+    %Groups = {'P1', 'P2', 'PM' ,'PG', 'CM', 'PMM', 'PMG', 'PGG', 'CMM', 'P4', 'P4M', 'P4G', 'P3', 'P3M1', 'P31M', 'P6', 'P6M'};
     %number of images per group
     inGroup = 5;
+    Groups = {'P3M1', 'P31M'};
     
     %% image parameters
     %image size
@@ -21,7 +22,7 @@ function generateWPSet
     %% Generate raw and scrambled set of groups 
     [rawSet, rawFreqSet] = generateGroupSet(Groups, inGroup, wpSize, tileArea);
     
-    scrambledSet = scrambleGroupSet(rawFreqSet, nScramble);
+    %scrambledSet = scrambleGroupSet(rawFreqSet, nScramble);
     
     %% average magnitude
     
@@ -32,21 +33,13 @@ function generateWPSet
     %%save parameters
     saveStr = '~/Documents/WPSet/dev/';
     sPath = strcat(saveStr, datestr(clock), '/');
-    saveMode = 'TImages'; %Save fmt/numeration     
+    saveMode = 'jpeg'; %Save fmt/numeration     
     
     
     %% Handling raw images 
-    sRaw = false;
+    sRaw = true;
     sRawPath = strcat(sPath, 'raw/');
     
-    %cell array to store raw images per group
-    raw = cell(ingroup, 1);
-    
-    %cell array to store ffts of images per group
-    rawFreq = cell(ingroup, 1);
-    
-    %cell array to store scrambled
-    rawScambled = cell(nScramble, 1);
     try
         mkdir(sPath);
         if(sRaw)
@@ -56,54 +49,15 @@ function generateWPSet
         error('MATLAB:generateWPSet:mkdir', sPath);
     end;
     
-%     %% Generating WPs and scrambling
-%     for i = 1:ngroups
-%         
-%         group = groups{i};
-%         disp(strcat('generating ', group));
-%         
-%         %%generating wallpapers, saving freq. representations
-%         for j = 1:ingroup
-%             raw{j} = new_SymmetricNoise(group, N, n);
-%             rawFreq{j} = fft2(double(raw{j})); 
-%         end;
-%         
-%         
-%         %save average magnitude
-%         avgMag = meanMag(rawFreq);
-%         %averaging images (replace each image's magnitude with the average) 
-%         averaged = filterGroup(meanGroup(rawFreq, avgMag), N); 
-% 
-%         
-%         %saving images
-%         if(strcmp(saveMode,'TImages'))
-%             ImgName = num2str(100*(100 + i));
-%             scImgName = num2str(100*(117 + i));
-%             saveFmt = 'png';
-%         else
-%             ImgName = strcat(group, '_');
-%             scImgName = strcat(group, '_', 'scrambled_');
-%             saveFmt = 'jpeg';
-%             filtered = filterGroup(rawFreq, N); 
-%             writeGroup(sPath, ImgName, filtered, saveFmt, '_original');
-%         end;
-%                 
-%         %saving with group-AVERAGED spectrum
-%         writeGroup(sPath, ImgName, averaged, saveFmt);
-%         
-%         %scrambling 
-%         for s = 1:nScramble
-%             rawScambled{s} = scramble(rawFreq, avgMag);
-%         end
-%         scrambled = filterGroup(rawScambled, N);
-%         writeGroup(sPath, scImgName, scrambled, saveFmt);
-%         
-%         if (sRaw)
-%            writeGroup(sRawPath, imgName, raw, saveFmt);
-%            writeGroup(sRawPath, imgName, rawScambled, saveFmt, 'scrambled');
-%         end
-%     end
-end
+    %% Saving WPs 
+    for i = 1:length(Groups)
+        res = filterGroup(rawSet{i}, wpSize);
+        writeGroup(sPath, Groups{i}, res, saveMode);
+        if (sRaw)
+            writeGroup(sRawPath, Groups{i}, rawSet{i}, saveMode);
+        end;
+    end    
+ end
 
     %% 
     
