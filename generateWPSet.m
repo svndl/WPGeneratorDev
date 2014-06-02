@@ -19,6 +19,11 @@ function generateWPSet
     %% define number of scrambled images per group
     nScramble = 5;
     
+    %% Remember current rand generation settings and switch to true random
+    
+    scurr =  rng;
+    rng('shuffle');
+
     %% Generate raw and scrambled set of groups 
     [rawSet, rawFreqSet] = generateGroupSet(Groups, inGroup, wpSize, tileArea);
     
@@ -29,6 +34,9 @@ function generateWPSet
     %% save averaged ans scrambled sets
     
 
+    %% restore rand settings
+    rng(scurr);
+    
     %% Average magnitude within the each group
     %%save parameters
     saveStr = '~/Documents/WPSet/dev/';
@@ -56,7 +64,8 @@ function generateWPSet
         if (sRaw)
             writeGroup(sRawPath, Groups{i}, rawSet{i}, saveMode);
         end;
-    end    
+    end
+    %%
  end
 
     %% 
