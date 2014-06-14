@@ -7,12 +7,12 @@ function generateWPSet
     %% group definitions
     %Groups = {'P1', 'P2', 'PM' ,'PG', 'CM', 'PMM', 'PMG', 'PGG', 'CMM', 'P4', 'P4M', 'P4G', 'P3', 'P3M1', 'P31M', 'P6', 'P6M'};
     %number of images per group
-    inGroup = 2;
-    Groups = {'P6'};
+    inGroup = 20;
+    Groups = {'P2', 'P3', 'P4', 'P6'};
     
     %% image parameters
     %image size
-    wpSize = 1024;
+    wpSize = 800;
     %area of tile that will be preserved across groups
     tileArea = 160*160;    
     
@@ -234,7 +234,7 @@ end
         end;
     end
     
-    %% Portia - Simoncelli scrambling tool
+    %% Portilla - Simoncelli scrambling tool
     % imSet{group}{image} -- cell matrix of raw (unfiltered, uncut) wallpapers
     % out{group}{image} -- scrambled wallpaper in frequency domain  
     

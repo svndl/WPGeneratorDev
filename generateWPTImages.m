@@ -196,7 +196,7 @@ end
         out = median(mag,3);
     end
     
-    %% Portia - Simoncelli scrambling tool
+    %% Portilla - Simoncelli scrambling tool
     % imSet{group}{image} -- cell matrix of raw (unfiltered, uncut) wallpapers
     % out{group}{image} -- scrambled wallpaper in frequency domain  
     function [scrambled, freqScrambled] = psScramble(imSet)
