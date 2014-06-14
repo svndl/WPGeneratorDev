@@ -32,8 +32,11 @@ function generateWPTImages_multi
     %% Average magnitude within the each group
     %%save parameters
     saveStr = '~/Documents/WPSet/dev/';
-    sPath = strcat(saveStr, datestr(clock), '/');
-    saveFmt = 'pgm'; %Save fmt/numeration     
+    timeStr = datestr(now,30);
+    timeStr(strfind(timeStr,'T'))='_';
+    sPath = strcat(saveStr, timeStr, '/');
+    saveFmt = 'PGM'; %Save fmt/numeration     
+    
     
     %% Handling raw images 
     saveRaw = false;
@@ -66,99 +69,97 @@ function generateWPTImages_multi
     
     parfor i = 1:length(Groups)    
         disp(strcat('generating', ' ', Groups{i}));
-        
+
         group = Groups{i};
         n = round(sqrt(tileArea));
-        %%generating wallpapers, saving freq. representations
+        
+        %% generating wallpapers, saving freq. representations
         raw = cellfun(@new_SymmetricNoise,...
             repmat({group},inGroup,1), ...
             repmat({wpSize},inGroup,1),...
             repmat({n},inGroup,1), ...
             'uni',false);
         raw = cellfun(@double,raw,'uni',false);
-        rawFreq = cellfun(@fft2,raw,'uni',false); 
-        %averaging images (replace each image's magnitude with the average) 
-        avgMag = meanMag(rawFreq);
-        avgRaw = meanGroup(rawFreq, avgMag);
-        filtered = filterGroup(avgRaw, wpSize);
-        masked = maskGroup(filtered, wpSize);
+        rawFreq = cellfun(@fft2,raw,'uni',false);
+        
+        %% image processing steps
+        avgMag = meanMag(rawFreq); % get average magnitude
+        avgRaw = cellfun(@spectra,repmat({avgMag},inGroup,1),rawFreq,'uni',false); % replace each image's magnitude with the average 
+        filtered = cellfun(@filterImg,avgRaw,repmat({wpSize},inGroup,1),'uni',false); % low-pass filtering + histeq 
+        masked = cellfun(@maskImg,filtered,repmat({wpSize},inGroup,1),'uni',false);     % masking the image (final step)
+                
+        %% making scrambled images
+        scrambled_raw = cellfun(@spectra,repmat({avgMag},nScramble,1),'uni',false); % only give spectra only arg, to make randoms
+        scrambled_filtered = cellfun(@filterImg,scrambled_raw, repmat({wpSize},inGroup,1),'uni',false);
+        scrambled_masked = cellfun(@maskImg,scrambled_filtered,repmat({wpSize},inGroup,1),'uni',false);
         
         %% saving averaged and scrambled images
         groupNumber = mapGroup(group);
+        saveStr = arrayfun(@(x) strcat(sPath, 'analysis/plot_',group, '_', num2str(x)),1:inGroup,'uni',false)';
+        tempDiff = cellfun(@freqAnalyser, ...
+                    repmat({avgMag},inGroup,1),... 
+                    avgRaw, filtered,masked, ...
+                    scrambled_raw, scrambled_filtered, scrambled_masked, saveStr,'uni',false);
+        all_in_one = cellfun(@(x,y,z) cat(2,x(1:wpSize,1:wpSize),y(1:wpSize,1:wpSize),z(1:wpSize,1:wpSize)),...
+            raw,avgRaw,filtered,'uni',false);
         for img = 1:inGroup
-            if(printAnalysis) 
-                saveStr = strcat(sPath, 'analysis/',group, '_', num2str(img), 'analysis');
-                freqAnalyser(avgMag, rawFreq{img}, filtered{img}, saveStr);
-                all_in_one = cat(2, raw{img}(1:wpSize, 1:wpSize), avgRaw{img}(1:wpSize, 1:wpSize), filtered{img}(1:wpSize, 1:wpSize));
-                imwrite(all_in_one,  strcat(sPath, 'analysis/',group, '_', num2str(img), '.jpeg'), 'jpeg');
+            if(printAnalysis)
+                imwrite(all_in_one{img},  strcat(sPath, 'analysis/steps_',group, '_', num2str(img), '.jpeg'), 'jpeg');
             end;
-            wallpaperName = strcat(num2str(1000*groupNumber + img), '.', saveFmt);
-            imwrite(filtered{img}, strcat(sPath, wallpaperName), saveFmt);
+            patternPath = strcat(sPath,num2str(1000*groupNumber + img), '.', saveFmt);
+            saveImg(masked{img},patternPath,saveFmt);
         end
         
-        %% making scrambled images
-        rawScrambled = cellfun(@scramble,repmat({rawFreq},nScramble,1),repmat({avgMag},nScramble,1),'uni',false);
-        scrambled = filterGroup(rawScrambled, wpSize);
-
         for scr = 1:nScramble
-            scrambleName = strcat(num2str(1000*(groupNumber + 17) + scr), '.', saveFmt);
-            imwrite(scrambled{scr}, strcat(sPath, scrambleName), saveFmt);
+            scramblePath = strcat(sPath,num2str(1000*(groupNumber + 17) + scr), '.', saveFmt);
+            saveImg(scrambled_masked{scr},scramblePath,saveFmt);
         end
         if(saveRaw)
             for img = 1:inGroup
-                wallpaperName = strcat(group, '_', num2str(img), '.', saveFmt);
-                imwrite(raw{img}, strcat(sRawPath, wallpaperName), saveFmt);
+                rawPath = strcat(sRawPath,group, '_', num2str(img), '.', saveFmt);
+                saveImg(raw{img},rawPath,saveFmt);
             end
         end
-        allMeaned(:,i)=avgRaw;
-        allAveraged(:,i)= averaged;
-        allScrambled(:,i)= scrambled;
-        allRaw(:,i)=raw;
+        symAveraged(:,i)=[avgRaw;scrambled_raw];
+        symFiltered(:,i)= [filtered;scrambled_filtered];
+        symMasked(:,i)= [masked;scrambled_masked];
+        diffMeans(:,:,i)=cell2mat(tempDiff);
+        
     end
-    save([sPath,datestr(clock),'.mat'],'allAveraged','allScrambled','allRaw','allMeaned','Groups');
+    save([sPath,'analysis/',timeStr,'.mat'],'symAveraged','symFiltered','symMasked','diffMeans','Groups','-v7.3');
     matlabpool close
 end
-
-
-    %% Filter/histeq group 
-    function out = filterGroup(inGroup, N)
-        num = length(inGroup);
-        out = cell(num, 1);
-        for n = 1:num
-            out{n} = filterImg(inGroup{n}, N);
-        end;
-    end
     
-    %% Mask group
-    function out = maskGroup(inGroup, N)
-        num = length(inGroup);
-        out = cell(num, 1);
-        for n = 1:num
-            out{n} = maskImg(inGroup{n}, N);
-        end
-    end
-    %% Filter/histeq image
+    function saveImg(img,savePath,saveFmt)
+        img = uint8(round(img.*255));
+        imwrite(img, savePath, saveFmt);
+    end 
+
+    %% Filter/mask every image
     function outImg = filterImg(inImg, N)        
         % Make filter intensity adaptive (600 is empirical number)
         sigma = N/600;
         lowpass = fspecial('gaussian', [9 9], sigma);
     
-        %%filter
+        % filter
         image = imfilter(inImg, lowpass);
         
-        %normalize
-        image = image - min(image(:));
-        image = image./max(image(:));
-        %%histeq
-        image_hn = histeq(image);
-        outImg = image_hn;
-        %prepare for PowerDiva (remove 1s and 0s), keep centered around 0.5        
-        outImg(outImg<1/255) = 1/255; 
+        % histeq
+        image = histeq(image);
+                
+        % normalize
+        image = (image)./range(image(:)); %scale to unit range
+        image = image - mean(image(:)); %bring mean luminance to zero		
+        image = image/max(abs(image(:))); %Scale so max signed value is 1
+        image = 125*image+127; % Scale into 2-252 range
+        image = image./255;
+        
+        outImg = image;
     end
     
-    %% Mask image
+    %% apply mask
     function outImg = maskImg(inImg, N)
-        %%define mask(circle)
+        %define mask(circle)
         r = 0.5*N;
         X = -0.5*N:0.5*N - 1;   
         X = repmat(X, [N, 1]);
@@ -172,7 +173,7 @@ end
         outImg(mask==0)=.5;
     end
     
-    %% Save group
+    %% save group
     function writeGroup(path, type, data, saveFmt, extra)
         if(nargin < 5)
             extra = '';
@@ -185,27 +186,13 @@ end
     end
     
     %% replace spectra
-    
-    function outImage = scramble(freqGroup, avgMag)
-        if(nargin < 2)
-            avgMag = meanMag(freqGroup);
-        end;
-        randImg = rand(size(avgMag));
-        randPhase = angle(fft2(double(randImg)));
-        
-        cmplxIm = avgMag.*exp(1i.*randPhase);
-        outImage = ifft2(cmplxIm, 'symmetric');
-    end
-    
-    function out = meanGroup(freqGroup, avgMag)
-        if (nargin < 2)
-            avgMag = meanMag(freqGroup);
-        end;
-        nImages = length(freqGroup);
-        out = cell(nImages, 1);
-        for n = 1:nImages
-            out{n} = ifft2(avgMag.*exp(1i.*angle(freqGroup{n})), 'symmetric');
+    function outImage = spectra(avgMag,imFreq)
+        if(nargin < 2) % if no image frequency input, make random image and get the frequency
+            randImg = rand(size(avgMag));
+            imFreq = fft2(double(randImg));
         end
+        cmplxIm = avgMag.*exp(1i.*angle(imFreq));
+        outImage = ifft2(cmplxIm, 'symmetric');
     end
     
     %% returns average mag of the group

@@ -7,8 +7,8 @@ function generateWPSet
     %% group definitions
     %Groups = {'P1', 'P2', 'PM' ,'PG', 'CM', 'PMM', 'PMG', 'PGG', 'CMM', 'P4', 'P4M', 'P4G', 'P3', 'P3M1', 'P31M', 'P6', 'P6M'};
     %number of images per group
-    inGroup = 5;
-    Groups = {'P3M1', 'P31M'};
+    inGroup = 2;
+    Groups = {'P6'};
     
     %% image parameters
     %image size
@@ -24,20 +24,53 @@ function generateWPSet
     scurr =  rng;
     rng('shuffle');
 
+    %% remember current rand settings, switch to shuffle
+    scurr =  rng;
+    rng('shuffle');
+    
     %% Generate raw and scrambled set of groups 
     [rawSet, rawFreqSet] = generateGroupSet(Groups, inGroup, wpSize, tileArea);
     
-    %scrambledSet = scrambleGroupSet(rawFreqSet, nScramble);
+    scrambledSet = scrambleGroupSet(rawFreqSet, nScramble);
     
+    [psSet, psFreqSet] = psScramble(rawSet);
+    psScrambledAvgSet = cell(numel(psFreqSet), 1);
+    
+    for n = numel(psFreqSet)
+        avgMagGroup = meanMag(rawFreqSet{n});
+        
+        % scrambled wallpapers will have different size and
+        % we'll have to crop/cat average magnitude
+        % since all images in psScrambledSet{n} have equal size,
+        % use the first one to determine it.
+        
+        Nx = size(psFreqSet{n}{1}, 1);
+        Ny = size(psFreqSet{n}{1}, 2);
+        diffNx = size(avgMagGroup, 1) - Nx;
+        diffNy = size(avgMagGroup, 2) - Ny;
+        
+        if (diffNx < 0 || diffNy < 0)
+            if (diffNx < 0)
+                added_X = cat(2, avgMagGroup, avgMagGroup(:, 1:abs(diffNx)));
+                added_XY = cat(1, added_X, added_X(1:abs(diffNy), :));
+                avgMagGroup = added_XY;
+            end
+        end
+        avgMagGroup = avgMagGroup(1:Nx, 1:Ny);
+        psScrambledAvgSet{n} = meanGroup(psFreqSet{n}, avgMagGroup);
+    end
     %% average magnitude
+    
     
     %% save averaged ans scrambled sets
     
 
     %% restore rand settings
+    %% switch back to prev rand settings
     rng(scurr);
     
     %% Average magnitude within the each group
+    
     %%save parameters
     saveStr = '~/Documents/WPSet/dev/';
     sPath = strcat(saveStr, datestr(clock), '/');
@@ -47,29 +80,43 @@ function generateWPSet
     %% Handling raw images 
     sRaw = true;
     sRawPath = strcat(sPath, 'raw/');
+    sScrambled = true;
+    sScrambledPath = strcat(sPath, 'scrambled/');
     
+    %% Create directories
+
     try
         mkdir(sPath);
         if(sRaw)
             mkdir(sRawPath);
-        end;
+        end
+        if(sScrambled)
+            mkdir(sScrambledPath);
+        end
     catch err
         error('MATLAB:generateWPSet:mkdir', sPath);
     end;
     
     %% Saving WPs 
     for i = 1:length(Groups)
-        res = filterGroup(rawSet{i}, wpSize);
-        writeGroup(sPath, Groups{i}, res, saveMode);
+        resSet = filterGroup(rawSet{i}, wpSize);
+        writeGroup(sPath, Groups{i}, resSet, saveMode);
         if (sRaw)
             writeGroup(sRawPath, Groups{i}, rawSet{i}, saveMode);
+            writeGroup(sRawPath, Groups{i}, psSet{i}, saveMode, '_PSscrambled');
+            writeGroup(sRawPath, Groups{i}, psScrambledAvgSet{i}, saveMode, '_avgPSscrambled');
         end;
+        if(sScrambled)
+            resScrambled = filterGroup(scrambledSet{i}, wpSize);
+            resPSScrambled = filterGroup(psSet{i}, wpSize);
+            resPSAvgScrambled = filterGroup(psScrambledAvgSet{i}, wpSize);
+            writeGroup(sScrambledPath, Groups{i}, resScrambled, saveMode, '_scrambled');
+            writeGroup(sScrambledPath, Groups{i}, resPSAvgScrambled, saveMode, '_psAvgScrambled');
+            writeGroup(sScrambledPath, Groups{i}, resPSScrambled, saveMode, '_psScrambled');            
+        end
     end
-    %%
- end
+end
 
-    %% 
-    
     function [rawSet, rawFreqSet] = generateGroupSet(groups, inGroup, imgSize, tileArea)
         %num of groups
         nGroups = length(groups);
@@ -97,13 +144,21 @@ function generateWPSet
     end
    
     %% Scramble wallpaper set
-    function rawScambled = scrambleWallpapers(rawFreq, numScramble)
+    function rawScrambled = scrambleGroupSet(rawFreq, numScramble)
+        nGroups = numel(rawFreq);
+        rawScrambled = cell(nGroups, 1);
+        
+        %use average ampliture here
+        for i = 1: nGroups           
+            rawScrambled{i} = scrambleGroup(rawFreq{i}, numScramble);
+        end
     end
     
     %% Scramble group
     function rawScambledGroup = scrambleGroup(inGroup, numScramble)
-        for s = 1:nScramble
-            rawScambledGroup{s} = scramble(rawFreq, avgMag);
+        rawScambledGroup = cell(numScramble, 1);
+        for s = 1:numScramble
+            rawScambledGroup{s} = scramble(inGroup);
         end
     end
     
@@ -152,13 +207,12 @@ function generateWPSet
         end;
         nImages = length(data);
         for n = 1:nImages
-            filename = strcat(type, num2str(n), extra, '.', saveFmt);              
+            filename = strcat(type, '_', num2str(n), extra, '.', saveFmt);              
             imwrite(data{n}, strcat(path, filename), saveFmt);
         end
     end
     
-    %% replace spectra
-    
+    %% replace phase spectrum with random values for given group 
     function outImage = scramble(freqGroup, avgMag)
         if(nargin < 2)
             avgMag = meanMag(freqGroup);
@@ -170,6 +224,7 @@ function generateWPSet
         outImage = ifft2(cmplxIm, 'symmetric');
     end
     
+    %% replace each image's amplitude with group average
     function out = meanGroup(freqGroup, avgMag)
         if (nargin < 2)
             avgMag = meanMag(freqGroup);
@@ -187,15 +242,79 @@ function generateWPSet
         mag = 0;
         for n = 1:nImages
             mag = mag + abs(freqGroup{n});
-        end;
+        end
         out = mag/nImages;
     end
     
     %% TODO: analyse group spectrum
-    function analyseGroup(rawFreqGroup, scrambledGroup, avgAmp)
+    function analyseGroup(rawFreqGroup, scrambledGroup, avgAmp, groupID)
+        
         if (nargin < 3)
             avgMag = meanMag(freqGroup);
         end
         
         %plot each image's spectrum, average magnitude and scrambled
+        for i = 1:numel(rawFreqGroup)
+            freqAnalyser(rawFreqGroup{i}, scrambledGroup{i}, avgAmp, strcat(groupID, 'freq_analysis_', num2str(i)));
+        end;
     end
+    
+    %% Portia - Simoncelli scrambling tool
+    % imSet{group}{image} -- cell matrix of raw (unfiltered, uncut) wallpapers
+    % out{group}{image} -- scrambled wallpaper in frequency domain  
+    
+    function [scrambled, freqScrambled] = psScramble(imSet)
+
+        Nsc = 4; % Number of scales
+        Nor = 4; % Number of orientations
+        Na = 11;  % Spatial neighborhood is Na x Na coefficients It must be an odd number!
+
+        Niter = 15;	% Number of iterations of synthesis loop
+    
+
+        x = numel(imSet);
+        scrambled = cell(x, 1);
+        freqScrambled = cell(x, 1);
+        for i = 1:x
+            
+            y = numel(imSet{i});
+            % two cell arrays to store freq-scrambled and raw-scrambled
+            scrambled{i} = cell(y, 1);
+            freqScrambled{i} = cell(y, 1);
+            
+            for j = 1:y
+                
+                image = imSet{i}{j};
+                Nx = size(image, 1);
+                Ny = size(image, 2);
+                
+                %for scrambling algorithm, image dimentions have to be  multiple of 2^(Nsc+2)
+                req_mult = 2^(Nsc + 2);
+                
+                req_Nx = req_mult*floor(Nx/req_mult);
+                req_Ny = req_mult*floor(Ny/req_mult);
+                % if current wallpaper's size is less than required 
+                
+                if (req_Nx > Nx || req_Ny > Ny)
+                   added_X = cat(2, image, image(:, 1:req_mult));
+                   added_XY = cat(1, added_X, added_X(1:req_mult, :));
+                   image = added_XY;
+                end
+                
+                Nsx = req_Nx;	
+                Nsy = req_Ny;
+                mask = zeros(Nsx, Nsy);
+                imKeep = zeros(Nsx*Nsy, 1);
+                im0 = image(1:Nsx, 1:Nsy);
+            
+                params = textureAnalysis(im0, Nsc, Nor, Na);
+
+                imKeep(:, 1) = reshape(mask, [Nsx*Nsy, 1]);
+                imKeep(:, 2) = reshape(im0, [Nsx*Nsy, 1]);
+
+                res = textureSynthesis(params, [Nsx Nsy], Niter, [], imKeep);
+                scrambled{i}{j} = res;
+                freqScrambled{i}{j} = fft2(res);
+            end
+        end
+    end    

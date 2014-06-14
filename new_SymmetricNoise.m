@@ -168,7 +168,7 @@ function img = catTiles(tile, N, type)
     disp(strcat(type,' area of tile = ', num2str(sq)));                
     
     %write tile
-    imwrite(tile, strcat('~/Documents/MATLAB/tiles/', type, '_tile.jpeg'), 'jpeg');
+    %imwrite(tile, strcat('~/Documents/MATLAB/tiles/', type, '_tile.jpeg'), 'jpeg');
     dN = 1 + floor(N./size(tile));
     img = repmat(tile, [dN(1), dN(2)]);                
 end
