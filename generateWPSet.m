@@ -115,6 +115,7 @@ function generateWPSet
             writeGroup(sScrambledPath, Groups{i}, resPSScrambled, saveMode, '_psScrambled');            
         end
     end
+end
 
     function [rawSet, rawFreqSet] = generateGroupSet(groups, inGroup, imgSize, tileArea)
         %num of groups
