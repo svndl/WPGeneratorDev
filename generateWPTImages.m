@@ -253,5 +253,35 @@ end
                 freqScrambled{i}{j} = fft2(res);
             end
         end
-    end    
+    end
+    
+    %% replace the PS-scrambled magnitude with group average
+    function psScrambledAvgSet = avgPSScrambled(psFreqSet, rawFreqSet)
+    
+        psScrambledAvgSet = cell(numel(psFreqSet), 1);
+        for n = numel(psFreqSet)
+            avgMagGroup = meanMag(rawFreqSet{n});
+        
+            % scrambled wallpapers will have different size and
+            % we'll have to crop/cat average magnitude
+            % since all images in psScrambledSet{n} have equal size,
+            % use the first one to determine it.
+        
+            Nx = size(psFreqSet{n}{1}, 1);
+            Ny = size(psFreqSet{n}{1}, 2);
+            diffNx = size(avgMagGroup, 1) - Nx;
+            diffNy = size(avgMagGroup, 2) - Ny;
+        
+            if (diffNx < 0 || diffNy < 0)
+                if (diffNx < 0)
+                    added_X = cat(2, avgMagGroup, avgMagGroup(:, 1:abs(diffNx)));
+                    added_XY = cat(1, added_X, added_X(1:abs(diffNy), :));
+                    avgMagGroup = added_XY;
+                end
+            end
+            avgMagGroup = avgMagGroup(1:Nx, 1:Ny);
+            psScrambledAvgSet{n} = meanGroup(psFreqSet{n}, avgMagGroup);
+        end
+    end
+
 
