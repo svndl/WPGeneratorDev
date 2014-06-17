@@ -12,14 +12,16 @@ function [scrambled, freqScrambled] = psScramble( inputSet )
     x = numel(inputSet);
     scrambled = cell(x, 1);
     freqScrambled = cell(x, 1);
+    %first, go through the original image set and  
+    
     for i = 1:x
-        y = numel(imSet{i});
+        y = numel(inputSet{i});
         % two cell arrays to store freq-scrambled and raw-scrambled
         scrambled{i} = cell(y, 1);
         freqScrambled{i} = cell(y, 1);
         
         for j = 1:y
-            image = imSet{i}{j};
+            image = inputSet{i}{j};
             Nx = size(image, 1);
             Ny = size(image, 2);
                 
@@ -53,4 +55,3 @@ function [scrambled, freqScrambled] = psScramble( inputSet )
         end
     end
 end
-
