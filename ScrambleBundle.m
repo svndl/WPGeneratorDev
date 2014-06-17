@@ -1,9 +1,9 @@
-function [psScrambled, psScrambledAveraged, phaseScrambled] = ScrambleBundle(inputSet, domain)
+function [phaseScrambled, psScrambled, psScrambledAvg] = ScrambleBundle(inputSet, domain)
     % scramble set in FREQ/SPACE domain
     
     numElements = length(inputSet);
     psScrambled = cell(numElements, 1);
-    psScrambledAveraged = cell(numElements, 1);
+    psScrambledAvg = cell(numElements, 1);
     phaseScrambled = cell(numElements, 1);
     alteredInputSet = cell(numElements, 1);
     avgMag = averageMagnitude(inputSet, domain);
@@ -22,22 +22,22 @@ function [psScrambled, psScrambledAveraged, phaseScrambled] = ScrambleBundle(inp
                     phaseScrambled{i} = scramblePhase(avgMag, numScrambled);
                 end
             otherwise
-                disp('Domain is not specified, attempting FREQ');
-                [psScrambled, psScrambledAveraged, phaseScrambled] = ScrambleBundle(inputSet, 'FREQ');
+                disp('Domain is not specified, attempting SPACE');
+                [phaseScrambled, psScrambled, psScrambledAvg] = ScrambleBundle(inputSet, 'SPACE');
         end;
         alteredAvgMag = averageMagnitude(alteredInputSet, domain);
         newMag = avgMag;
-        if (sum(size(alteredAvgMag) ~= size(avgMag))<2)
+        if (sum(size(alteredAvgMag) == size(avgMag))<2)
             newMag = alteredAvgMag;
         end;
-        psScrambledAveraged = replaceMagnitude(psScrambled, newMag, 'SPACE');
+        psScrambledAvg = replaceMagnitude(psScrambled, newMag, 'SPACE');
     catch err
         disp('ScrambleBundle:Error  ');
         disp(err.message);
         disp(err.stack(1));
         disp(err.stack(2));
         psScrambled = 0;
-        psScrambledAveraged = 0;
+        psScrambledAvg = 0;
         phaseScrambled = 0;
     end
 end
