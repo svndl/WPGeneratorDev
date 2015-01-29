@@ -59,7 +59,8 @@ function p6 = new_p6(tile)
     tile2 = max(tri, shifted);
     t2 = floor(0.5*size(tile2, 1));
     
-    tile2_flipped = [tile2(t2 + 1:end, :); tile2(1:t2, :)]; 
+    %tile2_flipped = [tile2(t2 + 1:end, :); tile2(1:t2, :)]; 
+    tile2_flipped = rot90(tile2, 2); 
     
     %size(tile3) = [2y1 x 6x1]
     tile3 = [tile2, tile2_flipped];
