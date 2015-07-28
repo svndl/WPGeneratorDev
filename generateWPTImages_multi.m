@@ -18,7 +18,7 @@ function generateWPTImages_multi
     %% define groups to be generated
     Groups = keySet;
     %number of images per group
-    inGroup = 20;
+    inGroup = 200;
     
     %% image parameters
     %image size
@@ -27,11 +27,11 @@ function generateWPTImages_multi
     tileArea = 100*100;    
     
     %% define number of scrambled images per group
-    nScramble = 20;    
+    nScramble = 200;    
 
     %% Average magnitude within the each group
     %%save parameters
-    saveStr = '~/Documents/WPSet/dev/';
+    saveStr = '~/Desktop/WPset/dev';
     timeStr = datestr(now,30);
     timeStr(strfind(timeStr,'T'))='_';
     sPath = strcat(saveStr, timeStr, '/');
@@ -51,7 +51,7 @@ function generateWPTImages_multi
     
     %cell array to store scrambled
     rawScambled = cell(nScramble, 1);
-    printAnalysis = true;
+    printAnalysis = false;
     
     try
         mkdir(sPath);
@@ -95,7 +95,11 @@ function generateWPTImages_multi
         
         %% saving averaged and scrambled images
         groupNumber = mapGroup(group);
-        saveStr = arrayfun(@(x) strcat(sPath, 'analysis/plot_',group, '_', num2str(x)),1:inGroup,'uni',false)';
+        if printAnalysis
+            saveStr = arrayfun(@(x) strcat(sPath, 'analysis/plot_',group, '_', num2str(x)),1:inGroup,'uni',false)';
+        else
+            saveStr = arrayfun(@(x) false,1:inGroup,'uni',false)';
+        end
         tempDiff = cellfun(@freqAnalyser, ...
                     repmat({avgMag},inGroup,1),... 
                     avgRaw, filtered,masked, ...
@@ -120,16 +124,25 @@ function generateWPTImages_multi
                 saveImg(raw{img},rawPath,saveFmt);
             end
         end
-        symAveraged(:,i)=[avgRaw;scrambled_raw];
-        symFiltered(:,i)= [filtered;scrambled_filtered];
-        symMasked(:,i)= [masked;scrambled_masked];
-        diffMeans(:,:,i)=cell2mat(tempDiff);
-        
+        symName = Groups{i};
+        symAveraged = [avgRaw;scrambled_raw];
+        symFiltered = [filtered;scrambled_filtered];
+        symMasked = [masked;scrambled_masked];
+        diffMeans = cell2mat(tempDiff);
+        saveMat(symName,symAveraged,symFiltered,symMasked,diffMeans,sPath,timeStr);
     end
-    save([sPath,'analysis/',timeStr,'.mat'],'symAveraged','symFiltered','symMasked','diffMeans','Groups','-v7.3');
     matlabpool close
 end
-    
+
+    function saveMat(name,averaged,filtered,masked,diffmeans,sPath,timeStr)
+        group.Name = name;
+        group.Averaged = averaged;
+        group.Filtered = filtered;
+        group.Masked = masked;
+        group.diffMeans = diffmeans;
+        save([sPath,'/',group.Name,'_',timeStr,'.mat'],'group','-v7.3');
+    end 
+
     function saveImg(img,savePath,saveFmt)
         img = uint8(round(img.*255));
         imwrite(img, savePath, saveFmt);

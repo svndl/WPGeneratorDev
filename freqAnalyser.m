@@ -75,21 +75,27 @@ function toPlotMeans = freqAnalyser(meanAmp, raw1,filter1,mask1,raw2,filter2,mas
     set(gca,...
         'fontsize',5,'box','off','xlim',[-5,365], ...
         'tickdir','out','LineWidth',.5,'TickLength',[0.0001 0.0001],'XMinorTick','off','YMinorTick','off');  
-    %% save figures
-    for z=1:2
-        lastSlash = max(strfind(saveString,'/'));
-        saveName = [saveString(lastSlash+1:lastSlash+4),num2str(z),saveString(lastSlash+5:end)];
-        if exist('plot2svg','file')
-            plot2svg([saveString(1:lastSlash),saveName,'.svg'],fig_an(z));
-            system(['cd ',saveString(1:lastSlash), ...
-                    '; svg2png ',saveName,'.svg' ...
-                    '; rm ',saveName,'.svg']);
-                    % note: for some reason plot2svg screws up the legend position when
-                    % run in parallel with parfor
-        else
-            saveas(fig_an(z), [saveString(1:lastSlash),saveName], 'jpeg');
+    if saveString
+        %% save figures
+        for z=1:2
+            lastSlash = max(strfind(saveString,'/'));
+            saveName = [saveString(lastSlash+1:lastSlash+4),num2str(z),saveString(lastSlash+5:end)];
+            if exist('plot2svg','file')
+                plot2svg([saveString(1:lastSlash),saveName,'.svg'],fig_an(z));
+                system(['cd ',saveString(1:lastSlash), ...
+                        '; svg2png ',saveName,'.svg' ...
+                        '; rm ',saveName,'.svg']);
+                        % note: for some reason plot2svg screws up the legend position when
+                        % run in parallel with parfor
+            else
+                saveas(fig_an(z), [saveString(1:lastSlash),saveName], 'jpeg');
+            end
+            close(fig_an(z));
         end
-        close(fig_an(z));
+    else
+        for z=1:2
+            close(fig_an(z));
+        end
     end
 end
     
