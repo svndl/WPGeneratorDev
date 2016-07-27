@@ -1,4 +1,27 @@
-function generateWPTImages_multi
+function generateWPTImages_multi(groupNames,nGroups,tileSize,outDir)
+    if nargin < 4
+        outDir = '~/Desktop/WPset';
+    else
+    end
+    if nargin < 3
+        tileSize = 100;
+    else
+    end
+    if nargin < 2
+        nGroups = 10;
+    else
+    end   
+    if nargin < 1
+        groupNames = {'P1', 'P2', 'PM' ,'PG', 'CM', 'PMM', 'PMG', 'PGG', 'CMM', 'P4', 'P4M', 'P4G', 'P3', 'P3M1', 'P31M', 'P6', 'P6M'};
+    else
+    end
+    
+    % if not cell, wrap
+    if ~iscell(groupNames)
+        groupNames = {groupNames};
+    else
+    end
+    
     %% check if matlab pool is open, close, then open
     if matlabpool('size') > 0 
         matlabpool close
@@ -16,22 +39,21 @@ function generateWPTImages_multi
     rhoLattice = {'CM', 'CMM'};
     obqLattice = {'P1', 'P2'};
     %% define groups to be generated
-    Groups = keySet;
     %number of images per group
-    inGroup = 200;
+    inGroup = nGroups;
     
     %% image parameters
     %image size
     wpSize = 600;
     %area of tile that will be preserved across groups
-    tileArea = 100*100;    
+    tileArea = tileSize*tileSize;    
     
     %% define number of scrambled images per group
-    nScramble = 200;    
+    nScramble = nGroups;    
 
     %% Average magnitude within the each group
     %%save parameters
-    saveStr = '~/Desktop/WPset/dev';
+    saveStr = sprintf('%s/dev',outDir);
     timeStr = datestr(now,30);
     timeStr(strfind(timeStr,'T'))='_';
     sPath = strcat(saveStr, timeStr, '/');
@@ -67,10 +89,10 @@ function generateWPTImages_multi
     
     %% Generating WPs and scrambling
     
-    parfor i = 1:length(Groups)    
-        disp(strcat('generating', ' ', Groups{i}));
+    parfor i = 1:length(groupNames)    
+        disp(strcat('generating', ' ', groupNames{i}));
 
-        group = Groups{i};
+        group = groupNames{i};
         n = round(sqrt(tileArea));
         
         %% generating wallpapers, saving freq. representations
@@ -124,7 +146,7 @@ function generateWPTImages_multi
                 saveImg(raw{img},rawPath,saveFmt);
             end
         end
-        symName = Groups{i};
+        symName = groupNames{i};
         symAveraged = [avgRaw;scrambled_raw];
         symFiltered = [filtered;scrambled_filtered];
         symMasked = [masked;scrambled_masked];
