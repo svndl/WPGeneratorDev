@@ -35,9 +35,9 @@ Repeating tile area is kept constant for all groups, we achieve it by cutting ou
 | CM:                       |       (n, n)       |      (n, 2n)          |   2                  |  0.25  |
 | P4G:                      |       (n, 2n)      |      (4n, 4n)         |   16                 |  0.25  |
 | CMM:                      |       (n, n)       |      (4n, 4n)         |   16                 |  0.25  |
-| P3:                       |       (n, n)       |  (3n, n $$\sqrt{3}$$) |   3 $$\sqrt{3}         |  1/$$\sqrt{3}$$ |  
-| P31M: s = round(n*2.632); |    (s, s)          |  (3s, s $$\sqrt{3}$$) |  $$ 3s^2\sqrt{3}$$/n^2 |  1/(2.632*$$\sqrt{3}$$) | 
-| P3M1, P6, P6M:            |    (s, s)          |  (s, s$$\sqrt{3}$$)   |   $$ s^2 \sqrt{3} /n^2  |  1/(2.632*$$\sqrt{3}$$)  | 
+| P3:                       |       (n, n)       |  (3n, n $\sqrt{3}$)   |   3 $\sqrt{3}$          |  1/ $\sqrt{3}$ |  
+| P31M: s = round(n*2.632); |    (s, s)          |  (3s, s $\sqrt{3}$)   |   $ 3s^2\sqrt{3}$ /n^2$ |  1/(2.632 $\sqrt{3}$) | 
+| P3M1, P6, P6M:            |    (s, s)          |  (s, s $\sqrt{3}$)    |   $ s^2 \sqrt{3} /n^2 $ |  1/(2.632 $\sqrt{3}$)  | 
 
 # Post-processing
 
