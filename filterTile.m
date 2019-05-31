@@ -1,13 +1,12 @@
-function outTile =  filterTile(inTile, filterIntensity)
+function out_tile =  filterTile(in_tile, filterIntensity)
     %outTile = generate_ftile(size(inTile, 1), size(inTile, 2));
-
     mu = 0.5;
-    nx = size(inTile, 1);
-    ny = size(inTile, 2);
+    nx = size(in_tile, 1);
+    ny = size(in_tile, 2);
     %% make adaptive filtering
-    
-    sigma_x = 10*filterIntensity/nx;
-    sigma_y = 10*filterIntensity/ny;
+   
+    sigma_x = filterIntensity/nx;
+    sigma_y = filterIntensity/ny;
     x = linspace(0, 1, nx);
     y = linspace(0, 1, ny);
     
@@ -19,12 +18,11 @@ function outTile =  filterTile(inTile, filterIntensity)
     gauss2 = gauss2 - min(min(gauss2));
     gauss2 = gauss2/max(max(gauss2));
     gauss2 = gauss2*5;
-    filtered = abs(ifft2(fft2(inTile).*gauss2));
+    filtered = abs(ifft2(fft2(in_tile).*gauss2));
     
     %normalize tile
 
-    outTile = filtered - min(min(filtered));
-    outTile = outTile/max(max(outTile));
+    out_tile = filtered - min(min(filtered));
+    out_tile = out_tile/max(max(out_tile));
     %outTile = histeq(outTile);
-    
 end

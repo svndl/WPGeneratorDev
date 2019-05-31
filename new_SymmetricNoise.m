@@ -8,7 +8,9 @@ function image = new_SymmetricNoise(type, N, n, optTexture)
     
     %default 
     if(nargin < 4) 
-        grain = 1;
+        grain = 3.910; 
+        % with tile size = 100, will
+        % result in values matched to Kohler et al. 2016
         texture = filterTile(rand(n), grain);
     else
         minDim = min(size(optTexture));
